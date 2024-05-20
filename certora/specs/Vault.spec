@@ -24,26 +24,8 @@ methods {
     // summary for rpow
     function RPow.rpow(uint256 x, uint256 y, uint256 base) internal returns (uint256, bool) => CVLPow(x, y, base);
 
-    // See comment near CVLgetCurrentOnBehalfOfAccount definition.
+    // See comment near CVLgetCurrentOnBehalfOfAccount definition in LoadVaultSummaries spec.
     function _.getCurrentOnBehalfOfAccount(address controller) external => CVLgetCurrentOnBehalfOfAccount(controller) expect (address, bool);
-
-    /// Unresolved calls
-    // // These are unresolved calls that havoc contract state.
-    // // Most of these cause these havocs because of a low-level call 
-    // // operation and are irrelevant for the rules.
-    // function _.invokeHookTarget(address caller) internal => NONDET;
-    // // another unresolved call that havocs all contracts
-    // function _.requireVaultStatusCheck() external => NONDET;
-    // function _.requireAccountAndVaultStatusCheck(address account) external => NONDET;
-    // // trySafeTransferFrom cannot be summarized as NONDET (due to return type
-    // // that includes bytes memory). So it is summarized as 
-    // // DummyERC20a.transferFrom
-    // function _.trySafeTransferFrom(address token, address from, address to, uint256 value) internal with (env e) => CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
-    // // safeTransferFrom is summarized as transferFrom
-    // // from DummyERC20a to avoid dealing with the low-level `call`
-    // function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
-    // function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
-    // function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
 
     function storage_lastInterestAccumulatorUpdate() external returns (uint48) envfree;
     function storage_cash() external returns (VaultHarness.Assets) envfree;
@@ -64,19 +46,14 @@ methods {
 // we get the same value when this is called for different parts
 ghost CVLgetCurrentOnBehalfOfAccountAddr(address) returns address;
 ghost CVLgetCurrentOnBehalfOfAccountBool(address) returns bool;
+
 function CVLgetCurrentOnBehalfOfAccount(address addr) returns (address, bool) {
     return (CVLgetCurrentOnBehalfOfAccountAddr(addr),
         CVLgetCurrentOnBehalfOfAccountBool(addr));
 }
 
-// Summarize trySafeTransferFrom as DummyERC20 transferFrom
-function CVLTrySafeTransferFrom(env e, address from, address to, uint256 value) returns (bool, bytes) {
-    bytes ret; // Ideally bytes("") if there is a way to do this
-    return (ERC20a.transferFrom(e, from, to, value), ret);
-}
-
 // Assumptions for LTVConfig
-function LTVConfigAssumptions(env e, BaseHarness.LTVConfig ltvConfig) returns bool {
+function LTVConfigAssumptions(env e, VaultHarness.LTVConfig ltvConfig) returns bool {
     bool LTVLessOne = ltvConfig.liquidationLTV < 10000;
     bool initialLTVLessOne = ltvConfig.initialLiquidationLTV < 10000;
     bool target_less_original = ltvConfig.liquidationLTV < ltvConfig.initialLiquidationLTV;
@@ -86,6 +63,8 @@ function LTVConfigAssumptions(env e, BaseHarness.LTVConfig ltvConfig) returns bo
         target_less_original && 
         require_uint32(timeRemaining) < ltvConfig.rampDuration;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////           #  asset To shares mathematical properties                  /////
@@ -102,8 +81,7 @@ rule conversionOfZero {
         "converting zero assets must return zero shares";
 }
 
-// passing
-// run: https://prover.certora.com/output/65266/e7e04c3291f843ba9fe0b81ea9a1f949/?anonymousKey=1828bc78fcb1ed87cf33d17878823becfad2ca23
+
 rule convertToAssetsWeakAdditivity() {
     env e;
     uint256 sharesA; uint256 sharesB;
@@ -114,8 +92,7 @@ rule convertToAssetsWeakAdditivity() {
         "converting sharesA and sharesB to assets then summing them must yield a smaller or equal result to summing them then converting";
 }
 
-// passing
-// run: https://prover.certora.com/output/65266/3bd31b8e066543fc8097a0ffce93ee41/?anonymousKey=5b8d2876fecf3d8af7a550e203faa4d58bbedf5c
+
 rule convertToSharesWeakAdditivity() {
     env e;
     uint256 assetsA; uint256 assetsB;
@@ -126,8 +103,7 @@ rule convertToSharesWeakAdditivity() {
         "converting assetsA and assetsB to shares then summing them must yield a smaller or equal result to summing them then converting";
 }
 
-// passing
-// run: https://prover.certora.com/output/40748/614a8496d9784ba5873b9be6636d9f3e/?anonymousKey=a0622d3850471ef5d170484cbe7c5fec18646d61
+
 rule conversionWeakMonotonicity {
     env e;
     uint256 smallerShares; uint256 largerShares;
@@ -139,8 +115,7 @@ rule conversionWeakMonotonicity {
         "converting more assets must yield equal or greater shares";
 }
 
-// passing
-// run: https://prover.certora.com/output/65266/302371dbde0246a28808b078c2164615/?anonymousKey=9759cd932017c8a142c5e1c4d6fa312b4ef94ae3
+
 rule conversionWeakIntegrity() {
     env e;
     uint256 sharesOrAssets;
@@ -150,6 +125,7 @@ rule conversionWeakIntegrity() {
         "converting assets to shares then back to assets must return assets less than or equal to the original amount";
 }
 
+
 rule convertToCorrectness(uint256 amount, uint256 shares)
 {
     env e;
@@ -158,35 +134,12 @@ rule convertToCorrectness(uint256 amount, uint256 shares)
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ////                   #    Unit Test                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-// passing with conf as here:
-// https://prover.certora.com/output/65266/3fd23869b2124c45aa47599c521a70e5?anonymousKey=4c63cefe6e66a12fc34d6c9c887c3481b67379f0
-rule depositMonotonicity() {
 
-    env e; storage start = lastStorage;
-
-    uint256 smallerAssets; uint256 largerAssets;
-    address receiver;
-    require currentContract != e.msg.sender && currentContract != receiver; 
-
-    require largerAssets < max_uint256; // amount = max_uint256 deposits the full balance and we get a CEX for that case.
-
-    safeAssumptions(e, e.msg.sender, receiver);
-
-    deposit(e, smallerAssets, receiver);
-    uint256 smallerShares = balanceOf(e, receiver) ;
-
-    deposit(e, largerAssets, receiver) at start;
-    uint256 largerShares = balanceOf(e, receiver) ;
-
-    assert smallerAssets < largerAssets => smallerShares <= largerShares,
-            "when supply tokens outnumber asset tokens, a larger deposit of assets must produce an equal or greater number of shares";
-}
-
-//run: https://prover.certora.com/output/65266/8d021eab19f945cd86a3ef904b0aa6dc/?anonymousKey=bd4cc32f9af86278b0eceaae2316ea3e385c1cdf
 rule zeroDepositZeroShares(uint assets, address receiver)
 {
     env e;
@@ -200,6 +153,8 @@ rule zeroDepositZeroShares(uint assets, address receiver)
 
     assert shares == 0 <=> assets == 0;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////                    #    Valid State                                   /////
@@ -215,6 +170,16 @@ invariant assetsMoreThanSupply(env e)
         }
     }
 
+
+invariant noSupplyIfNoAssets(env e)
+    noSupplyIfNoAssetsDef(e)     // see defition in "helpers and miscellaneous" section
+    {
+        preserved {
+            safeAssumptions(e, _, e.msg.sender);
+        }
+    }
+
+
 invariant noAssetsIfNoSupply(env e) 
    ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ))
@@ -225,15 +190,6 @@ invariant noAssetsIfNoSupply(env e)
             safeAssumptions(e, any, e.msg.sender);
         }
     }
-
-invariant noSupplyIfNoAssets(env e)
-    noSupplyIfNoAssetsDef(e)     // see defition in "helpers and miscellaneous" section
-    {
-        preserved {
-            safeAssumptions(e, _, e.msg.sender);
-        }
-    }
-
 
 
 ghost mathint sumOfBalances {
@@ -248,16 +204,6 @@ hook Sload VaultHarness.PackedUserSlot val currentContract.vaultStorage.users[KE
     require sumOfBalances >= to_mathint(val);
 }
 
-// hook Sstore balanceOf[KEY address addy] uint256 newValue (uint256 oldValue)  {
-//     sumOfBalances = sumOfBalances + newValue - oldValue;
-// }
- 
-
-// hook Sload uint256 val balanceOf[KEY address addy]  {
-//     require sumOfBalances >= to_mathint(val);
-// }
-
-// passing: https://prover.certora.com/output/65266/de3636d287d2473294463c07263fc11e/?anonymousKey=ac8f74e6c5c1298f0954a21fafd41cccf32b9ffb
 invariant totalSupplyIsSumOfBalances(env e)
     to_mathint(totalSupply(e)) == sumOfBalances;
 
@@ -266,26 +212,6 @@ invariant totalSupplyIsSumOfBalances(env e)
 ////////////////////////////////////////////////////////////////////////////////
 ////                    #     State Transition                             /////
 ////////////////////////////////////////////////////////////////////////////////
-
-//run: https://prover.certora.com/output/65266/3ef25c98a7e34422bcf177d853662b5f/?anonymousKey=ca43e967a607a404f34b39c70f6517e90dac0902
-rule totalsMonotonicity() {
-    method f; env e; calldataarg args;
-    require e.msg.sender != currentContract; 
-    uint256 totalSupplyBefore = totalSupply(e);
-    uint256 totalAssetsBefore = totalAssets(e);
-    address receiver;
-    safeAssumptions(e, receiver, e.msg.sender);
-    callReceiverFunctions(f, e, receiver);
-
-    uint256 totalSupplyAfter = totalSupply(e);
-    uint256 totalAssetsAfter = totalAssets(e);
-    
-    // possibly assert totalSupply and totalAssets must not change in opposite directions
-    assert totalSupplyBefore < totalSupplyAfter  <=> totalAssetsBefore < totalAssetsAfter,
-        "if totalSupply changes by a larger amount, the corresponding change in totalAssets must remain the same or grow";
-    assert totalSupplyAfter == totalSupplyBefore => totalAssetsBefore == totalAssetsAfter,
-        "equal size changes to totalSupply must yield equal size changes to totalAssets";
-}
 
 rule underlyingCannotChange() {
     address originalAsset = asset();
@@ -299,30 +225,12 @@ rule underlyingCannotChange() {
         "the underlying asset of a contract must not change";
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////                    #   High Level                                    /////
 ////////////////////////////////////////////////////////////////////////////////
 
-//// #  This rules timeout - we will show how to deal with timeouts 
-/* rule totalAssetsOfUser(method f, address user ) {
-    env e;
-    calldataarg args;
-    safeAssumptions(e, e.msg.sender, user);
-    require user != currentContract;
-    mathint before = userAssets(user) + maxWithdraw(user); 
-
-    // need to ignore cases where user is msg.sender but someone else the receiver 
-    address receiver; 
-    require e.msg.sender != user;
-    uint256 assets; uint256 shares;
-    callFunctionsWithReceiverAndOwner(e, f, assets, shares, receiver, e.msg.sender);
-    mathint after = userAssets(user) + maxWithdraw(user); 
-    assert after >= before; 
-}
-*/
-
-// passing
-// run: https://prover.certora.com/output/65266/1912c053cdf8485087f2c050146c64aa/?anonymousKey=a12e3d573258a4d8136a19b612448a50f80b9a21
 rule dustFavorsTheHouse(uint assetsIn )
 {
     env e;
@@ -342,10 +250,11 @@ rule dustFavorsTheHouse(uint assetsIn )
     assert balanceAfter >= balanceBefore;
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////                       #   Risk Analysis                           /////////
 ////////////////////////////////////////////////////////////////////////////////
-
 
 invariant vaultSolvency(env e)
     totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= totalAssets(e)  {
@@ -355,7 +264,6 @@ invariant vaultSolvency(env e)
             require currentContract != asset(); 
         }
     }
-
 
 
 rule redeemingAllValidity() { 
@@ -370,67 +278,11 @@ rule redeemingAllValidity() {
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ////               # stakeholder properties  (Risk Analysis )         //////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// passing. run: https://prover.certora.com/output/65266/48a3074474f1475baf13fe3cb9602567/?anonymousKey=9111d29e8d8ed721825b12f083128af396e5e814
-rule contributingProducesShares(method f)
-filtered {
-    f -> f.selector == sig:deposit(uint256,address).selector
-      || f.selector == sig:mint(uint256,address).selector
-}
-{
-    env e; uint256 assets; uint256 shares;
-    address contributor;
-
-    // need to minimize these
-    require actualCaller(e) == contributor;
-    require contributor == CVLgetCurrentOnBehalfOfAccountAddr(0);
-    require actualCallerCheckController(e) == contributor;
-
-    address receiver;
-    require currentContract != contributor
-         && currentContract != receiver;
-
-    require previewDeposit(e, assets) + balanceOf(e, receiver) <= max_uint256; // safe assumption because call to _mint will revert if totalSupply += amount overflows
-    require shares + balanceOf(e, receiver) <= max_uint256; // same as above
-
-    safeAssumptions(e, contributor, receiver);
-
-    uint256 contributorAssetsBefore = userAssets(e, contributor);
-    uint256 receiverSharesBefore = balanceOf(e, receiver);
-
-    callContributionMethods(e, f, assets, shares, receiver);
-
-    uint256 contributorAssetsAfter = userAssets(e, contributor);
-    uint256 receiverSharesAfter = balanceOf(e, receiver);
-
-    assert contributorAssetsBefore > contributorAssetsAfter <=> receiverSharesBefore < receiverSharesAfter,
-        "a contributor's assets must decrease if and only if the receiver's shares increase";
-}
-
-// passing
-// run: https://prover.certora.com/output/65266/28a47dd30c6747cbbc4495de59e5f965?anonymousKey=2e86f97ff0030d5489503334c71961bb5978f331
-rule onlyContributionMethodsReduceAssets(method f) {
-    env e; calldataarg args;
-    address user; require user != currentContract;
-    uint256 userAssetsBefore = userAssets(e, user);
-
-    safeAssumptions(e, user, _);
-
-    f(e, args);
-
-    uint256 userAssetsAfter = userAssets(e, user);
-
-    assert userAssetsBefore > userAssetsAfter =>
-        (f.selector == sig:deposit(uint256,address).selector ||
-         f.selector == sig:mint(uint256,address).selector),
-        "a user's assets must not go down except on calls to contribution methods";
-}
-
-// passing
-// run: https://prover.certora.com/output/65266/8ead2419e398420286adb1f636a35249/?anonymousKey=f135ef5ad92b9e187a5df3ebce5499f693eae015
 rule reclaimingProducesAssets(method f)
 filtered {
     f -> f.selector == sig:withdraw(uint256,address,address).selector
@@ -467,11 +319,7 @@ definition noSupplyIfNoAssetsDef(env e) returns bool =
     // for this ERC4626 implementation balanceOf(Vault) is not the same as total assets
     // ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ));
-
-// definition noSupplyIfNoAssetsStrongerDef() returns bool =                // fails for ERC4626BalanceOfHarness as explained in the readme
-//     ( userAssets(currentContract) == 0 => totalSupply() == 0 ) &&
-//     ( totalAssets() == 0 <=> ( totalSupply() == 0 ));
-
+    
 
 function safeAssumptions(env e, address receiver, address owner) {
     require currentContract != asset(); // Although this is not disallowed, we assume the contract's underlying asset is not the contract itself
@@ -481,15 +329,11 @@ function safeAssumptions(env e, address receiver, address owner) {
     requireInvariant noSupplyIfNoAssets(e);
     requireInvariant assetsMoreThanSupply(e); 
 
-    //// # Note : we don't want to use singleBalanceBounded and singleBalanceBounded invariants 
-    /* requireInvariant sumOfBalancePairsBounded(receiver, owner );
-    requireInvariant singleBalanceBounded(receiver);
-    requireInvariant singleBalanceBounded(owner);
-    */
-    ///// # but, it safe to assume that a single balance is less than sum of balances
-    require ( (receiver != owner => balanceOf(e, owner) + balanceOf(e, receiver) <= to_mathint(totalSupply(e)))  && 
-                balanceOf(e, receiver) <= totalSupply(e) &&
-                balanceOf(e, owner) <= totalSupply(e));
+    require ( 
+        (receiver != owner 
+            =>  balanceOf(e, owner) + balanceOf(e, receiver) <= to_mathint(totalSupply(e)))
+                && balanceOf(e, receiver) <= totalSupply(e)
+                && balanceOf(e, owner) <= totalSupply(e));
 }
 
 
@@ -522,6 +366,7 @@ function callContributionMethods(env e, method f, uint256 assets, uint256 shares
     }
 }
 
+
 function callReclaimingMethods(env e, method f, uint256 assets, uint256 shares, address receiver, address owner) {
     if (f.selector == sig:withdraw(uint256,address,address).selector) {
         withdraw(e, assets, receiver, owner);
@@ -530,6 +375,7 @@ function callReclaimingMethods(env e, method f, uint256 assets, uint256 shares, 
         redeem(e, shares, receiver, owner);
     }
 }
+
 
 function callFunctionsWithReceiverAndOwner(env e, method f, uint256 assets, uint256 shares, address receiver, address owner) {
     if (f.selector == sig:withdraw(uint256,address,address).selector) {
@@ -552,17 +398,3 @@ function callFunctionsWithReceiverAndOwner(env e, method f, uint256 assets, uint
         f(e, args);
     }
 }
-
-rule sanity (method f) {
-    env e;
-    calldataarg args;
-    f(e, args);
-    assert false;
-}
-
-// rule vaultCacheSanity (method f) {
-//     env e;
-//     VaultHarness.VaultCache vaultCache;
-//     CVLInitVaultCache(e, vaultCache);
-//     assert false;
-// }

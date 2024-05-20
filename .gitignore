@@ -27,3 +27,4 @@ coverage/
 .certora_internal
 gambit_out
 collect.json
+cache

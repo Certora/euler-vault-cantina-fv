@@ -1,21 +1,20 @@
 import "./Base.spec";
 
 methods {
-    // function Cache.loadVault() internal returns (BaseHarness.VaultCache memory) with (env e) => CVLloadVault(e);
+    // function Cache.loadVault() internal returns (VaultHarness.VaultCache memory) with (env e) => CVLloadVault(e);
     // assumes vault does not update, if you want to have a less strict assumption, use CVLLoadVault above
-    function Cache.loadVault() internal returns (BaseHarness.VaultCache memory) with (env e) => CVLLoadVaultAssumeNoUpdate(e);
+    function Cache.loadVault() internal returns (VaultHarness.VaultCache memory) with (env e) => CVLLoadVaultAssumeNoUpdate(e);
 }
 
 // parameter is meant to be block.timestamp
 persistent ghost newInterestBorrows(uint256) returns uint256;
 
 
-
-function CVLLoadVaultAssumeNoUpdate(env e) returns BaseHarness.VaultCache {
-    BaseHarness.VaultCache vaultCache;
+function CVLLoadVaultAssumeNoUpdate(env e) returns VaultHarness.VaultCache {
+    VaultHarness.VaultCache vaultCache;
     uint48 lastUpdate = storage_lastInterestAccumulatorUpdate();
-    BaseHarness.Owed oldTotalBorrows = storage_totalBorrows(); 
-    BaseHarness.Shares oldTotalShares = storage_totalShares();
+    VaultHarness.Owed oldTotalBorrows = storage_totalBorrows(); 
+    VaultHarness.Shares oldTotalShares = storage_totalShares();
     require vaultCache.cash == storage_cash();
     uint48 timestamp48 = require_uint48(e.block.timestamp);
     bool updated = timestamp48 != lastUpdate;
@@ -32,7 +31,7 @@ function CVLLoadVaultAssumeNoUpdate(env e) returns BaseHarness.VaultCache {
     require vaultCache.configFlags == storage_configFlags();
     require vaultCache.snapshotInitialized == storage_snapshotInitialized();
 
-    require vaultCache.asset == erc20;
+    require vaultCache.asset == ERC20a;
     require vaultCache.asset == asset();
     require vaultCache.oracle == oracleAddress;
     require vaultCache.unitOfAccount == unitOfAccount;
@@ -42,11 +41,11 @@ function CVLLoadVaultAssumeNoUpdate(env e) returns BaseHarness.VaultCache {
 
 
 // WIP summarization, use at your discretion
-function CVLLoadVault(env e) returns BaseHarness.VaultCache {
-    BaseHarness.VaultCache vaultCache;
+function CVLLoadVault(env e) returns VaultHarness.VaultCache {
+    VaultHarness.VaultCache vaultCache;
     uint48 lastUpdate = storage_lastInterestAccumulatorUpdate();
-    BaseHarness.Owed oldTotalBorrows = storage_totalBorrows(); 
-    BaseHarness.Shares oldTotalShares = storage_totalShares();
+    VaultHarness.Owed oldTotalBorrows = storage_totalBorrows(); 
+    VaultHarness.Shares oldTotalShares = storage_totalShares();
     require vaultCache.cash == storage_cash();
     uint48 timestamp48 = require_uint48(e.block.timestamp);
     bool updated = timestamp48 != lastUpdate;
@@ -92,7 +91,7 @@ function CVLLoadVault(env e) returns BaseHarness.VaultCache {
     require vaultCache.configFlags == storage_configFlags();
     require vaultCache.snapshotInitialized == storage_snapshotInitialized();
 
-    require vaultCache.asset == erc20;
+    require vaultCache.asset == ERC20a;
     require vaultCache.asset == asset();
     require vaultCache.oracle == oracleAddress;
     require vaultCache.unitOfAccount == unitOfAccount;
