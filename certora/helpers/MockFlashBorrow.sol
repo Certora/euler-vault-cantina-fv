@@ -21,6 +21,8 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
   uint8 public repeat_on_count;
   address public transferTo;
   address public spender;
+  address public token;
+  uint256 public amount;
 
   constructor(IERC3156FlashLender lender) {
     _lender = lender;
@@ -29,10 +31,6 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
 
   /// @dev ERC-3156 Flash loan callback
   function onFlashLoan(
-    address /*initiator*/,
-    address token,
-    uint256 amount,
-    uint256 /*fee*/,
     bytes calldata /*data*/
   ) external override returns (bytes32) {
     counter++;

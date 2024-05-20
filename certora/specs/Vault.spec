@@ -41,6 +41,10 @@ methods {
 
 }
 
+// used to test running time
+use builtin rule sanity;
+use rule privilegedOperation;
+
 // This is not in the scene for this config, so we just want it to be
 // an uninterpreted function rather than NONDET so that
 // we get the same value when this is called for different parts
@@ -256,6 +260,7 @@ rule dustFavorsTheHouse(uint assetsIn )
 ////                       #   Risk Analysis                           /////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// doesn't pass but should be implemented
 invariant vaultSolvency(env e)
     totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= totalAssets(e)  {
       preserved {
@@ -319,7 +324,7 @@ definition noSupplyIfNoAssetsDef(env e) returns bool =
     // for this ERC4626 implementation balanceOf(Vault) is not the same as total assets
     // ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ));
-    
+
 
 function safeAssumptions(env e, address receiver, address owner) {
     require currentContract != asset(); // Although this is not disallowed, we assume the contract's underlying asset is not the contract itself

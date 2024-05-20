@@ -12,6 +12,10 @@ methods {
     function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
     function vaultIsController(address account) external returns (bool) envfree;
 
+    /// Summaries
+    // General
+    function _.mulDiv(uint144 a, uint256 b, uint256 c) internal => CVLMulDiv(a, b, c) expect uint144; 
+
     // IPriceOracle
     function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
     function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
@@ -20,6 +24,7 @@ methods {
     function ProxyUtils.metadata() internal returns (address, address, address)=> CVLProxyMetadata();
 
     /// Unresolved calls
+    function _.emitTransfer(address, address, uint256) external => NONDET;
     // These are unresolved calls that havoc contract state.
     // Most of these cause these havocs because of a low-level call 
     // operation and are irrelevant for the rules.
@@ -37,7 +42,11 @@ methods {
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
 
-    function _.mulDiv(uint144 a, uint256 b, uint256 c) internal => CVLMulDiv(a, b, c) expect uint144; 
+    // nondet for now, dispatch if needed
+    function _.checkVaultStatus() external => NONDET;
+    function _.checkAccountStatus(address) external => NONDET;
+    function _.computeInterestRate(address, uint256, uint256) external => NONDET;
+    function _.computeInterestRateView(address, uint256, uint256) external => NONDET;
 }
 
 ghost CVLGetQuote(uint256, address, address) returns uint256 {
