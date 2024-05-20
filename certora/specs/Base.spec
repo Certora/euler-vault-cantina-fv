@@ -36,6 +36,8 @@ methods {
     function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
+
+    function _.mulDiv(uint144 a, uint256 b, uint256 c) internal => CVLMulDiv(a, b, c) expect uint144; 
 }
 
 ghost CVLGetQuote(uint256, address, address) returns uint256 {
@@ -52,6 +54,12 @@ function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint
         CVLGetQuote(amount, base, quote),
         CVLGetQuote(amount, base, quote)
     );
+}
+
+function CVLMulDiv(uint144 a, uint256 b, uint256 c) returns uint144 {
+    mathint result = (a * b) / c; 
+    require result <= max_uint144;
+    return assert_uint144(result); 
 }
 
 ghost address oracleAddress;
