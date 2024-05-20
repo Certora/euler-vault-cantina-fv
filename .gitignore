@@ -22,3 +22,8 @@ _corpus/
 # Coverage directory
 coverage/
 *.info
+
+# certora
+.certora_internal
+gambit_out
+collect.json
