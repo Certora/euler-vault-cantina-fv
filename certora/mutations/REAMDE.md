@@ -1,0 +1,1 @@
+Only contracts ending in `_n` are mutated. Regular contracts with no change to the name are added to give participants an idea of which contracts will be mutated and to make sure conf files work without issue.
