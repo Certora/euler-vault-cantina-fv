@@ -260,12 +260,13 @@ rule dustFavorsTheHouse(uint assetsIn )
 ////                       #   Risk Analysis                           /////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// doesn't pass but should be implemented
 invariant vaultSolvency(env e)
-    totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= totalAssets(e)  {
+    totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= require_uint256(cache_cash(e))  {
       preserved {
             requireInvariant totalSupplyIsSumOfBalances(e);
             require e.msg.sender != currentContract;
+            require actualCaller(e) != currentContract;
+            require actualCallerCheckController(e) != currentContract;
             require currentContract != asset(); 
         }
     }

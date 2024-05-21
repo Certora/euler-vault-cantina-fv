@@ -73,4 +73,8 @@ contract VaultHarness is VaultModule, TokenModule, AbstractBaseHarness {
     function storage_configFlags() public view returns (Flags) {
         return vaultStorage.configFlags;
     }
+
+    function cache_cash() public view returns (Assets) {
+        return loadVault().cash;
+    }
 }
