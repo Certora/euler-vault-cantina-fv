@@ -63,7 +63,7 @@ The Formal Verification (FV) component of the contest is about using the Certora
 
 ## Submission Guidelines
 - **Submission**: 
-  - Make sure to submit a vulnerability with FV severity on Cantina.
+  - Submit your work by sharing the private repo you cloned with `teryanarmen` and `nd-certora` on github.
   - Properties for real bugs will be submitted as github issues on the same private repo and must contain a link to the normal bug submission through Cantina marked with relevant severity (L/M/H).
   - Submissions will not be public and will only be shared with the committee by sharing your private repo on github.
 
