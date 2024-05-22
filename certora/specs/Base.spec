@@ -45,6 +45,7 @@ methods {
     // nondet for now, dispatch if needed
     function _.checkVaultStatus() external => NONDET;
     function _.checkAccountStatus(address) external => NONDET;
+    function _.checkAccountStatus(address,address[]) external => NONDET;
     function _.computeInterestRate(address, uint256, uint256) external => NONDET;
     function _.computeInterestRateView(address, uint256, uint256) external => NONDET;
 }

@@ -43,7 +43,6 @@ methods {
 
 // used to test running time
 use builtin rule sanity;
-use rule privilegedOperation;
 
 // This is not in the scene for this config, so we just want it to be
 // an uninterpreted function rather than NONDET so that
