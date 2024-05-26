@@ -7,4 +7,3 @@ methods {
 
 // used to test running time
 use builtin rule sanity;
-use rule privilegedOperation;
