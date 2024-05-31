@@ -168,8 +168,11 @@ invariant assetsMoreThanSupply(env e)
     {
         preserved {
             require e.msg.sender != currentContract;
+            require actualCaller(e) != currentContract;
+            require actualCallerCheckController(e) != currentContract;
             address any;
-            safeAssumptions(e, any , e.msg.sender);
+            safeAssumptions(e, any , actualCaller(e));
+            safeAssumptions(e, any , actualCallerCheckController(e));
         }
     }
 
@@ -184,13 +187,13 @@ invariant noSupplyIfNoAssets(env e)
 
 
 invariant noAssetsIfNoSupply(env e) 
-   ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ))
 
     {
         preserved {
-        address any;
-            safeAssumptions(e, any, e.msg.sender);
+            address any;
+            safeAssumptions(e, any, actualCaller(e));
+            safeAssumptions(e, any, actualCallerCheckController(e));
         }
     }
 
