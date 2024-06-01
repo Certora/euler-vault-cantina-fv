@@ -170,7 +170,8 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
     }
 
     function executeLiquidation(VaultCache memory vaultCache, LiquidationCache memory liqCache, uint256 minYieldBalance)
-        private
+        // certora: 'private' to 'internal'
+        internal
     {
         // Check minimum yield.
 
