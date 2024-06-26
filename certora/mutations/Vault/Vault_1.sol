@@ -183,9 +183,7 @@ abstract contract VaultModule is IVault, AssetTransfers, BalanceUtils {
         (VaultCache memory vaultCache, address account) = initOperation(OP_SKIM, CHECKACCOUNT_NONE);
 
         Assets balance = vaultCache.asset.balanceOf(address(this)).toAssets();
-        
-        // mutation: always set available to balance
-        Assets available = balance;
+        Assets available = balance <= vaultCache.cash ? Assets.wrap(0) : balance.subUnchecked(vaultCache.cash);
 
         Assets assets;
         if (amount == type(uint256).max) {
@@ -227,7 +225,8 @@ abstract contract VaultModule is IVault, AssetTransfers, BalanceUtils {
     ) private {
         if (vaultCache.cash < assets) revert E_InsufficientCash();
 
-        decreaseAllowance(owner, sender, shares);
+        // mutation: switch sender and owner
+        decreaseAllowance(sender, owner, shares);
         decreaseBalance(vaultCache, owner, sender, receiver, shares, assets);
 
         pushAssets(vaultCache, receiver, assets);

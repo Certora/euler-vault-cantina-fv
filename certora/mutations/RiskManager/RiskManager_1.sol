@@ -104,7 +104,8 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
             uint256 prevSupply = snapshotCash.toUint() + prevBorrows;
             uint256 supply = totalAssetsInternal(vaultCache);
 
-            if (supply > vaultCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
+            // mutation: replace `>` with `==`
+            if (supply == vaultCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
 
             snapshot.reset();
         }

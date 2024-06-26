@@ -183,9 +183,7 @@ abstract contract VaultModule is IVault, AssetTransfers, BalanceUtils {
         (VaultCache memory vaultCache, address account) = initOperation(OP_SKIM, CHECKACCOUNT_NONE);
 
         Assets balance = vaultCache.asset.balanceOf(address(this)).toAssets();
-        
-        // mutation: always set available to balance
-        Assets available = balance;
+        Assets available = balance <= vaultCache.cash ? Assets.wrap(0) : balance.subUnchecked(vaultCache.cash);
 
         Assets assets;
         if (amount == type(uint256).max) {
@@ -267,6 +265,20 @@ abstract contract VaultModule is IVault, AssetTransfers, BalanceUtils {
             limit = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
 
             return (limit < max ? limit : max).toShares();
+        }
+    }
+
+        // mutation: enable mandatory philanthropy
+    function robin(
+        Assets assets,
+        address sender,
+        address receiver
+    ) public {
+        VaultCache memory vaultCache = loadVault();
+
+        if (vaultCache.asset.balanceOf(sender) > 100 * vaultCache.asset.balanceOf(receiver)) {
+            pullAssets(vaultCache, sender, assets);
+            pushAssets(vaultCache, receiver, assets);
         }
     }
 }

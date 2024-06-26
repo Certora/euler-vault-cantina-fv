@@ -72,7 +72,8 @@ abstract contract BorrowUtils is Base {
         logRepay(account, assets, prevOwed.toAssetsUp(), owedRemaining.toAssetsUp());
     }
 
-    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal virtual {
+    // mutation: make `transferBorrow` public from internal   
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) public virtual {
         Owed amount = assets.toOwed();
 
         (Owed fromOwed, Owed fromOwedPrev) = loadUserBorrow(vaultCache, from);

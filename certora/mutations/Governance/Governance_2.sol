@@ -226,7 +226,8 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
         Shares protocolShares = vaultCache.accumulatedFees - governorShares;
 
         // Decrease totalShares because increaseBalance will increase it by that total amount
-        vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - vaultCache.accumulatedFees;
+        // mutation: fail to decrease totalShares by accumulatedFees
+        // vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - vaultCache.accumulatedFees;
 
         vaultStorage.accumulatedFees = vaultCache.accumulatedFees = Shares.wrap(0);
 
